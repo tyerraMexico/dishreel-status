@@ -1,0 +1,31 @@
+name: Check pipeline
+
+on:
+  workflow_dispatch:
+
+  repository_dispatch:
+    types:
+      - webhook
+  schedule:
+    - cron: "*/30 * * * *"
+
+env:
+  URL_TO_CHECK: ${{ secrets.URL_TO_CHECK }}
+  MAIL_API_URL: ${{ secrets.MAIL_API_URL }}
+  MAIL_USER: ${{ secrets.MAIL_USER }}
+  API_KEY: ${{ secrets.API_KEY }}
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: |
+          npm install 
+          npm run dev
+          git config user.name scrapper-bot
+          git diff --quiet && git diff --staged --quiet || git commit -am "build: :white_check_mark: updated data"
+          git push origin main
